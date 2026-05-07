@@ -61,7 +61,10 @@ export const translations = {
     next_id_btn: "⏭️ Next ID",
     reset_btn: "🔄 Reset",
     print_btn: "📄 Print",
-    admin_btn: "🛠️ Admin"
+    admin_btn: "🛠️ Admin",
+    clear_confirm: "⚠️ **Clear All Data Confirmation**\n\nThis will delete ALL data including images, settings, and state for ALL users.\nThis action cannot be undone.\n\nAre you sure you want to proceed?",
+    clear_success: "✅ All data has been cleared.",
+    clear_cancelled: "❌ Clear operation cancelled."
   },
   am: {
     start: "✅ ቦት ዝገባ ነው! ምስሎችን ይላኩ እና ፊት/ኋላ እንደሆኑ ይምረጡ።\nቅንብሮችን ለመለዋወጥ /settings ይጠቀሙ።",
@@ -124,7 +127,10 @@ export const translations = {
     next_id_btn: "⏭️ ቀጣይ ID",
     reset_btn: "🔄 ዳግም አስጀምር",
     print_btn: "📄 ህትመት",
-    admin_btn: "🛠️ አስተዳዳሪ"
+    admin_btn: "🛠️ አስተዳዳሪ",
+    clear_confirm: "⚠️ **ሁሉንም ውሂብ ማጥፋት ማረጋገጫ**\n\nይህ ለሁሉም ተጠቃሚዎች ምስሎችን፣ ቅንብሮችን እና ሁኔታን ያጠፋል።\nይህ እርምጃ መመለስ አይችልም።\n\nእርግጠኛ ነዎት መቀጠል ይፈልጋሉ?",
+    clear_success: "✅ ሁሉም ውሂብ ተወግዷል።",
+    clear_cancelled: "❌ ማጥፋት ተሰርዟል።"
   },
   om: {
     start: "✅ Bot To'annaa! Suuraa ergi fi quddaa/gadbuu-darraa fakkaata.\nNagaasiwwan /settings ittiin jijjiirtu.",
@@ -187,7 +193,10 @@ export const translations = {
     next_id_btn: "⏭️ ID Itti Aanaa",
     reset_btn: "🔄 Haaromsi",
     print_btn: "📄 Maxxansi",
-    admin_btn: "🛠️ Bulchiinsa"
+    admin_btn: "🛠️ Bulchiinsa",
+    clear_confirm: "⚠️ **Hunda Balleessuu Mirkaneessuu**\n\nKun hunda cuuphawwanii, nagaasiiwwanii fi haala hunda userootaaf balleessa.\nJechoota kanaa deebi'uu hin danda'u.\n\nMirkaneeffannee itti fufuu barbaadda?",
+    clear_success: "✅ Hunda cuuphawwanii balleeffameera.",
+    clear_cancelled: "❌ Balleessuu haamameera."
   }
 };
 

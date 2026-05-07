@@ -19,7 +19,7 @@ sharp.simd(false);
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const STAMP_LABELS = false;
-const ADMIN_ID = process.env.ADMIN_ID ? parseInt(process.env.ADMIN_ID) : 1730215473;
+const ADMIN_ID = process.env.ADMIN_ID ? parseInt(process.env.ADMIN_ID) : null;
 
 if (!BOT_TOKEN) {
   process.exit(1);
@@ -57,6 +57,12 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   // Silent start - no console output
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`Port ${PORT} is already in use, health check server not started. Bot will continue without health check.`);
+  } else {
+    console.error('Health check server error:', err);
+  }
 });
 
 const ROOT = path.resolve("./data");
@@ -440,13 +446,15 @@ async function downloadTelegramFile(fileId, outPath, maxRetries = 3) {
       return outPath;
     } catch (error) {
       lastError = error;
+      console.error(`Download attempt ${attempt + 1} failed for file ${fileId}:`, error.message);
       if (attempt < maxRetries - 1) {
         const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
   }
-  throw new Error(`Download failed: ${lastError.message}`);
+  console.error(`Download completely failed for file ${fileId}:`, lastError.message);
+  return null; // Return null instead of throwing to prevent bot crash
 }
 
 async function stampLabel(inputImgPath, labelText, outPath) {
@@ -746,6 +754,18 @@ async function handleCommand(chatId, text, msg) {
     return bot.sendMessage(chatId, t(chatId, state, 'next_id', st.currentGroup + 1));
   }
 
+  if (cmd === "/clear") {
+    // Only admin can use this command
+    if (chatId !== ADMIN_ID) return bot.sendMessage(chatId, t(chatId, state, 'unauthorized'));
+    
+    const confirmKb = {
+      inline_keyboard: [
+        [{ text: t(chatId, state, 'yes_reset'), callback_data: "confirm_clear" }, { text: t(chatId, state, 'cancel'), callback_data: "cancel_clear" }]
+      ]
+    };
+    return bot.sendMessage(chatId, t(chatId, state, 'clear_confirm'), { parse_mode: "Markdown", reply_markup: confirmKb });
+  }
+
   if (cmd === "/print" || cmd === "📄 print" || cmd === "print") {
     const groups = st.imageGroups || [[]];
     const { pairs } = buildPairsFromGroups(groups, Infinity);
@@ -823,6 +843,45 @@ async function handleCallback(query) {
   if (data === "cancel_reset") {
     bot.answerCallbackQuery(queryId, { text: t(chatId, state, 'cancel') });
     return bot.editMessageText(t(chatId, state, 'print_cancelled_msg'), { chat_id: chatId, message_id: query.message.message_id, reply_markup: { inline_keyboard: [] } });
+  }
+
+  if (data === "cancel_clear") {
+    bot.answerCallbackQuery(queryId, { text: t(chatId, state, 'cancel') });
+    return bot.editMessageText(t(chatId, state, 'clear_cancelled'), { chat_id: chatId, message_id: query.message.message_id, reply_markup: { inline_keyboard: [] } });
+  }
+
+  if (data === "confirm_clear") {
+    // Only admin can confirm
+    if (chatId !== ADMIN_ID) return bot.answerCallbackQuery(queryId, { text: t(chatId, state, 'unauthorized') });
+    
+    // Delete everything in the data folder
+    try {
+      if (fs.existsSync(ROOT)) {
+        const items = fs.readdirSync(ROOT);
+        for (const item of items) {
+          const itemPath = path.join(ROOT, item);
+          const stat = fs.statSync(itemPath);
+          if (stat.isDirectory()) {
+            // Delete directory and all contents
+            fs.rmSync(itemPath, { recursive: true, force: true });
+          } else {
+            // Delete file
+            fs.unlinkSync(itemPath);
+          }
+        }
+      }
+      
+      // Clear all in-memory state
+      state.clear();
+      blacklistedChats.clear();
+      
+      bot.answerCallbackQuery(queryId, { text: "✅ Cleared" });
+      return bot.editMessageText(t(chatId, state, 'clear_success'), { chat_id: chatId, message_id: query.message.message_id, reply_markup: { inline_keyboard: [] } });
+    } catch (error) {
+      console.error("Error clearing data:", error);
+      bot.answerCallbackQuery(queryId, { text: "❌ Error" });
+      return bot.editMessageText(`❌ Error clearing data: ${error.message}`, { chat_id: chatId, message_id: query.message.message_id, reply_markup: { inline_keyboard: [] } });
+    }
   }
 
   if (data === "confirm_reset") {
@@ -1613,10 +1672,14 @@ bot.on("photo", async (msg) => {
 
   if (!caption.includes("front") && !caption.includes("back")) queuePendingImage(st, imgPath, msg.message_id, downloadPromise);
   try {
-    await downloadPromise;
+    const result = await downloadPromise;
+    if (!result) {
+      console.error(`Download failed for chat ${chatId}, skipping image`);
+      return;
+    }
   } catch (error) {
     console.error(`Download failed for chat ${chatId}:`, error.message);
-    return bot.sendMessage(chatId, "❌ Failed to download image. Please try again.");
+    return;
   }
 
   // Handle Media Groups (Albums) - existing logic
