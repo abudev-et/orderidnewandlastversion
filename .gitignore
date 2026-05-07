@@ -1,0 +1,59 @@
+# Ignore environment variables file
+.env
+
+# Ignore Node.js modules
+node_modules/
+
+# Ignore user data and uploads
+data/
+
+# Ignore PM2 logs
+logs/
+*.log
+
+# Ignore PM2 runtime files
+.pm2/
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Ignore Python cache and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ignore output directory
+output/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary files
+*.tmp
+*.temp
